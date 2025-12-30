@@ -29,7 +29,7 @@ backend/
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone git@github.com:xiaotaozi1127/story-teller.git
+   git clone git@github.com:xiaotaozi1127/story-teller-backend.git backend
    cd backend
    ```
 
@@ -59,4 +59,16 @@ Restart VS Code.
 ✅ The FastAPI import error should disappear.
 
 
+## Run the backend
+To start the FastAPI application, run:
+```bash
+poetry run uvicorn app.main:app --reload
+```
 
+The application will be available at `http://127.0.0.1:8000`.
+
+## Running Tests
+To run the test suite, use:
+```bash
+poetry run pytest ./tests
+```
