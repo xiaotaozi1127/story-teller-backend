@@ -6,11 +6,13 @@ authors = [
     {name = "xiaotaozi1127@hotmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10,<3.12"
 dependencies = [
     "fastapi (>=0.128.0,<0.129.0)",
     "uvicorn (>=0.40.0,<0.41.0)",
-    "python-multipart (>=0.0.21,<0.0.22)"
+    "python-multipart (>=0.0.21,<0.0.22)",
+    "torch (>=2.9.1,<3.0.0)",
+    "tts (>=0.22.0,<0.23.0)"
 ]
 
 
