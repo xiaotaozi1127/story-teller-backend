@@ -62,6 +62,7 @@ Restart VS Code.
 ## Run the backend
 To start the FastAPI application, run:
 ```bash
+export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 poetry run uvicorn app.main:app --reload
 ```
 
