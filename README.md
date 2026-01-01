@@ -6,20 +6,18 @@ This is a Python project built using FastAPI, a modern, fast (high-performance) 
 ## Project Structure
 ```
 backend/
-├── app/
+├── README.md
+├── app
 │   ├── __init__.py
 │   ├── main.py
-│   └── api/
-│   |    ├── routes.py
-│   |    └── __pycache__/
-│   └── services
-│   └── core
-├── tests/
-│   ├── test_main.py
-│   └── __pycache__/
+│   └── tts_engine.py
+├── outputs
+│   └── final_test.wav
+├── poetry.lock
 ├── pyproject.toml
-├── pytest.ini
-└── .gitignore
+└── uploads
+    ├── harvard.wav
+    └── myvoice.wav
 ```
 
 ## Requirements
@@ -83,4 +81,3 @@ curl -X 'POST' \
 To run the test suite, use:
 ```bash
 poetry run pytest ./tests
-```
