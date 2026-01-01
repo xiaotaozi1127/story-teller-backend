@@ -68,6 +68,17 @@ poetry run uvicorn app.main:app --reload
 
 The application will be available at `http://127.0.0.1:8000`.
 
+## Verify the speech generation
+run below command in
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/generate-story' \
+  -F 'text=It is very interesting to watch the dragon boat racing.' \
+  -F 'language=en' \
+  -F 'voice_sample=@uploads/myvoice.wav' \
+  --output outputs/final_test.wav
+```
+
 ## Running Tests
 To run the test suite, use:
 ```bash

@@ -33,15 +33,16 @@ async def generate_story(
             speaker_wav=temp_voice_path, 
             language=language
         )
-        # Write to buffer
+        # Convert to numpy and ensure it's float32
+        audio_array = np.array(wav_data).astype(np.float32)
+        
         buffer = io.BytesIO()
-        sf.write(buffer, np.array(wav_data), 24000, format='WAV')
-        # 2. Get the raw bytes directly
-        audio_bytes = buffer.getvalue() 
-        buffer.close()
+        # Write the numpy array
+        sf.write(buffer, audio_array, 24000, format='WAV')
+        buffer.seek(0)
 
         # 3. Return as a standard Response (Swagger handles this perfectly)
-        return Response(content=audio_bytes, media_type="audio/wav", headers={"Content-Disposition": "attachment; filename=story.wav"})
+        return StreamingResponse(buffer, media_type="audio/wav")
 
     except Exception as e:
         return {"error": str(e)}
