@@ -67,14 +67,24 @@ poetry run uvicorn app.main:app --reload
 The application will be available at `http://127.0.0.1:8000`.
 
 ## Verify the speech generation
-run below command in
+run below command to generate some English sound
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/generate-story' \
+  'http://127.0.0.1:8000/stories/test-speech' \
   -F 'text=It is very interesting to watch the dragon boat racing.' \
   -F 'language=en' \
   -F 'voice_sample=@uploads/myvoice.wav' \
   --output outputs/final_test.wav
+```
+
+run below command to generate some Chinese sound
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/stories/test-speech' \
+  -F 'text=我很喜欢这里的生活，人们都很友好，风景也很漂亮.' \
+  -F 'language=zh' \
+  -F 'voice_sample=@uploads/myvoice.wav' \
+  --output outputs/chinese_test.wav
 ```
 
 ## Running Tests
