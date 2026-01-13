@@ -1,13 +1,95 @@
     
 import io
+from uuid import UUID, uuid4
 import numpy as np
 import soundfile as sf
-from fastapi import APIRouter, Form, File, UploadFile
+from fastapi import APIRouter, Form, File, UploadFile, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+from app.services.chunker import split_text
+from app.services.worker import process_story_chunks
 from app.tts_engine import TTSService
+from app.storage.memory import chunks, stories
+from app.schemas.story import ChunkInfo, StoryCreateResponse, StoryStatusResponse
+from typing import Dict, List
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 tts_service = TTSService()
+
+@router.get("/{story_id}", response_model=StoryStatusResponse)
+async def get_story_status(story_id: UUID):
+    if story_id not in stories:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    story = stories[story_id]
+    story_chunks = chunks.get(story_id, [])
+
+    completed = sum(1 for c in story_chunks if c["status"] == "ready")
+
+    return StoryStatusResponse(
+        story_id=story_id,
+        status=story["status"],
+        language=story["language"],
+        total_chunks=story["total_chunks"],
+        completed_chunks=completed,
+        chunks=[
+            ChunkInfo(index=c["index"], status=c["status"])
+            for c in story_chunks
+        ],
+    )
+
+@router.post("/long-story", response_model=StoryCreateResponse, status_code=202)
+async def create_story(
+    background_tasks: BackgroundTasks,
+    text: str = Form(...),
+    language: str = Form("en"),
+    chunk_size: int = Form(300),
+    voice: UploadFile = File(...)
+):
+    if len(text) > 30_000:
+        raise HTTPException(status_code=400, detail="Text too long")
+
+    story_id = uuid4()
+    voice_path = f"/tmp/{story_id}_voice.wav"
+
+    with open(voice_path, "wb") as f:
+        f.write(await voice.read())
+
+    text_chunks = split_text(text, max_len=chunk_size)
+
+    if not text_chunks:
+        raise HTTPException(status_code=400, detail="No valid text chunks")
+
+    # Save story metadata
+    stories[story_id] = {
+        "id": story_id,
+        "status": "processing",
+        "language": language,
+        "total_chunks": len(text_chunks),
+    }
+
+    # Save chunk metadata
+    chunks[story_id] = [
+        {
+            "index": i,
+            "text": chunk,
+            "status": "pending",
+            "audio_path": None,
+        }
+        for i, chunk in enumerate(text_chunks)
+    ]
+
+    # Schedule background TTS (stub for now)
+    background_tasks.add_task(
+        process_story_chunks,
+        story_id,
+        voice_path
+    )
+
+    return StoryCreateResponse(
+        story_id=story_id,
+        status="processing",
+        total_chunks=len(text_chunks),
+    )
 
 @router.post("/test-speech")
 async def generate_speech(
