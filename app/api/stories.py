@@ -3,8 +3,9 @@ import io
 from uuid import UUID, uuid4
 import numpy as np
 import soundfile as sf
+from pathlib import Path
 from fastapi import APIRouter, Form, File, UploadFile, BackgroundTasks, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from app.services.chunker import split_text
 from app.services.worker import process_story_chunks
 from app.tts_engine import TTSService
@@ -14,6 +15,40 @@ from typing import Dict, List
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 tts_service = TTSService()
+
+@router.get("/{story_id}/chunks/{index}")
+async def get_story_chunk_audio(story_id: UUID, index: int):
+    # Story exists?
+    if story_id not in stories:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    story_chunks = chunks.get(story_id)
+    if not story_chunks:
+        raise HTTPException(status_code=404, detail="No chunks found")
+
+    # Index valid?
+    if index < 0 or index >= len(story_chunks):
+        raise HTTPException(status_code=404, detail="Invalid chunk index")
+
+    chunk = story_chunks[index]
+
+    # Chunk status handling
+    if chunk["status"] == "pending" or chunk["status"] == "processing":
+        raise HTTPException(status_code=409, detail="Chunk not ready")
+
+    if chunk["status"] == "failed":
+        raise HTTPException(status_code=500, detail="Chunk generation failed")
+
+    audio_path = Path(chunk["audio_path"])
+
+    if not audio_path.exists():
+        raise HTTPException(status_code=500, detail="Audio file missing")
+
+    return FileResponse(
+        path=audio_path,
+        media_type="audio/wav",
+        filename=audio_path.name,
+    )
 
 @router.get("/{story_id}", response_model=StoryStatusResponse)
 async def get_story_status(story_id: UUID):
