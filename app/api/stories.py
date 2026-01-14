@@ -82,6 +82,8 @@ async def create_story(
 ):
     if len(text) > 30_000:
         raise HTTPException(status_code=400, detail="Text too long")
+    if language not in ("en", "zh"):
+        raise HTTPException(400, "Unsupported language")
 
     story_id = uuid4()
     voice_path = f"/tmp/{story_id}_voice.wav"
