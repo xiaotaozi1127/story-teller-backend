@@ -87,6 +87,32 @@ curl -X 'POST' \
   --output outputs/chinese_test.wav
 ```
 
+You should hear audio:
+```bash
+afplay outputs/chinese_test.wav   # macOS
+```bash
+
+## Verify the long story generation
+run below command to generate audios by long text
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8000/stories/long-story' \
+  -F 'text= on the wall, Who is the fairest one of all?”  And the mirror would reply:  “You, O Queen, are the fairest of all.”  This pleased her, for she knew the mirror spoke the truth.' \
+  -F 'language=en' \
+  -F 'chunk_size=300' \
+  -F 'voice_sample=@uploads/myvoice.wav'
+```
+
+run below command to check the chunk status for a story
+```bash
+curl -v http://localhost:8000/stories/<id>/chunks/0 --output chunk0.wav
+```
+
+You should hear audio:
+```bash
+afplay chunk0.wav   # macOS
+```
+
 ## Running Tests
 To run the test suite, use:
 ```bash
