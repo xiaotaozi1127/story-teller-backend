@@ -1,5 +1,6 @@
     
 import io
+import logging
 from uuid import UUID, uuid4
 import numpy as np
 import soundfile as sf
@@ -13,11 +14,14 @@ from app.storage.memory import chunks, stories
 from app.schemas.story import ChunkInfo, StoryCreateResponse, StoryStatusResponse
 from typing import Dict, List
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/stories", tags=["stories"])
 tts_service = TTSService()
 
 @router.get("/{story_id}/chunks/{index}")
 async def get_story_chunk_audio(story_id: UUID, index: int):
+    logger.debug(f"GET story chunk endpoint received request")
     # Story exists?
     if story_id not in stories:
         raise HTTPException(status_code=404, detail="Story not found")
@@ -52,6 +56,7 @@ async def get_story_chunk_audio(story_id: UUID, index: int):
 
 @router.get("/{story_id}", response_model=StoryStatusResponse)
 async def get_story_status(story_id: UUID):
+    logger.debug(f"GET story status endpoint received request for story_id: {story_id}")
     if story_id not in stories:
         raise HTTPException(status_code=404, detail="Story not found")
 
@@ -80,6 +85,10 @@ async def create_story(
     chunk_size: int = Form(300),
     voice: UploadFile = File(...)
 ):
+    logger.debug(f"POST /long-story endpoint received request")
+    logger.debug(f"Request parameters - language: {language}, chunk_size: {chunk_size}, voice filename: {voice.filename}")
+    logger.debug(f"Text length: {len(text)} characters")
+    
     if len(text) > 30_000:
         raise HTTPException(status_code=400, detail="Text too long")
     if language not in ("en", "zh"):
@@ -122,6 +131,8 @@ async def create_story(
         voice_path
     )
 
+    logger.debug(f"Story created successfully - story_id: {story_id}, total_chunks: {len(text_chunks)}")
+    
     return StoryCreateResponse(
         story_id=story_id,
         status="processing",

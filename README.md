@@ -61,7 +61,7 @@ Restart VS Code.
 To start the FastAPI application, run:
 ```bash
 export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The application will be available at `http://127.0.0.1:8000`.
