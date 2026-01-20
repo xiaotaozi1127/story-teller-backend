@@ -7,7 +7,7 @@ import soundfile as sf
 from pathlib import Path
 from fastapi import APIRouter, Form, File, UploadFile, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
-from app.services.chunker import split_text
+from app.services.chunker import split_text_smart
 from app.services.worker import process_story_chunks
 from app.tts_engine import TTSService
 from app.storage.memory import chunks, stories
@@ -100,7 +100,7 @@ async def create_story(
     with open(voice_path, "wb") as f:
         f.write(await voice.read())
 
-    text_chunks = split_text(text, max_len=chunk_size)
+    text_chunks = split_text_smart(text, max_len=chunk_size)
 
     if not text_chunks:
         raise HTTPException(status_code=400, detail="No valid text chunks")

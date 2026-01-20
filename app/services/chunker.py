@@ -1,24 +1,23 @@
 import re
-from typing import List
 
+BAD_EDGE_CHARS = '\"\'“”‘’():;—–'
 
-def split_text(text: str, max_len: int = 300) -> List[str]:
-    # Chinese + English punctuation
-    sentences = re.split(r'(?<=[。！？.!?])', text)
+def clean_chunk(text: str) -> str:
+    return text.strip().strip(BAD_EDGE_CHARS)
+
+def split_text_smart(text: str, max_len: int = 300) -> list[str]:
+    sentences = re.split(r'(?<=[.!?])\s+', text)
     chunks = []
     current = ""
 
     for s in sentences:
-        if not s.strip():
-            continue
-
         if len(current) + len(s) <= max_len:
-            current += s
+            current += " " + s if current else s
         else:
-            chunks.append(current.strip())
+            chunks.append(clean_chunk(current))
             current = s
 
-    if current.strip():
-        chunks.append(current.strip())
+    if current:
+        chunks.append(clean_chunk(current))
 
     return chunks
