@@ -96,7 +96,7 @@ afplay outputs/chinese_test.wav   # macOS
 run below command to generate audios by long text
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/stories/long-story' \
+  'http://127.0.0.1:8000/stories/' \
   -F 'text= on the wall, Who is the fairest one of all?”  And the mirror would reply:  “You, O Queen, are the fairest of all.”  This pleased her, for she knew the mirror spoke the truth.' \
   -F 'language=en' \
   -F 'chunk_size=300' \

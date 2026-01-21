@@ -1,6 +1,7 @@
     
 import io
 import logging
+from datetime import datetime
 from uuid import UUID, uuid4
 import numpy as np
 import soundfile as sf
@@ -11,13 +12,33 @@ from app.services.chunker import split_text_smart
 from app.services.worker import process_story_chunks
 from app.tts_engine import TTSService
 from app.storage.memory import chunks, stories
-from app.schemas.story import ChunkInfo, StoryCreateResponse, StoryStatusResponse
+from app.schemas.story import ChunkInfo, StoryCreateResponse, StoryStatusResponse, StoryListItem
 from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 tts_service = TTSService()
+
+@router.get("", response_model=list[StoryListItem])
+def list_stories():
+    logger.debug("GET stories endpoint received request")
+    sorted_stories = sorted(
+        stories.values(),
+        key=lambda x: x.get("created_at", datetime.min),
+        reverse=True,
+    )
+    return [
+        StoryListItem(
+            id=story["id"],
+            status=story["status"],
+            title=story.get("title", "Untitled story"),
+            language=story["language"],
+            total_chunks=story["total_chunks"],
+            created_at=story["created_at"],
+        )
+        for story in sorted_stories
+    ]
 
 @router.get("/{story_id}/chunks/{index}")
 async def get_story_chunk_audio(story_id: UUID, index: int):
@@ -68,6 +89,7 @@ async def get_story_status(story_id: UUID):
     return StoryStatusResponse(
         story_id=story_id,
         status=story["status"],
+        title=story.get("title", "Untitled story"),
         language=story["language"],
         total_chunks=story["total_chunks"],
         completed_chunks=completed,
@@ -77,17 +99,19 @@ async def get_story_status(story_id: UUID):
         ],
     )
 
-@router.post("/long-story", response_model=StoryCreateResponse, status_code=202)
+@router.post("", response_model=StoryCreateResponse, status_code=202)
 async def create_story(
     background_tasks: BackgroundTasks,
     text: str = Form(...),
+    title: str = Form(""),
     language: str = Form("en"),
     chunk_size: int = Form(300),
     voice: UploadFile = File(...)
 ):
-    logger.debug(f"POST /long-story endpoint received request")
+    logger.debug("POST /long-story endpoint received request")
     logger.debug(f"Request parameters - language: {language}, chunk_size: {chunk_size}, voice filename: {voice.filename}")
     logger.debug(f"Text length: {len(text)} characters")
+    logger.debug(f"Title provided: '{title}'")
     
     if len(text) > 30_000:
         raise HTTPException(status_code=400, detail="Text too long")
@@ -105,12 +129,16 @@ async def create_story(
     if not text_chunks:
         raise HTTPException(status_code=400, detail="No valid text chunks")
 
+    normalized_title = title.strip() or "Untitled story"
+
     # Save story metadata
     stories[story_id] = {
         "id": story_id,
         "status": "processing",
+        "title": normalized_title,
         "language": language,
         "total_chunks": len(text_chunks),
+        "created_at": datetime.utcnow(),
     }
 
     # Save chunk metadata
