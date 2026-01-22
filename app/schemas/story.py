@@ -29,4 +29,5 @@ class StoryListItem(BaseModel):
     title: str
     language: str
     total_chunks: int
+    total_duration_seconds: float
     created_at: datetime

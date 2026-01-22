@@ -39,4 +39,18 @@ def process_story_chunks(story_id: UUID, voice_path: str):
             print("XTTS ERROR:")
             traceback.print_exc()
 
+    # Calculate total duration from all ready chunks
+    total_duration = 0.0
+    for chunk in chunks[story_id]:
+        if chunk["status"] == "ready" and chunk.get("audio_path"):
+            try:
+                audio_path = Path(chunk["audio_path"])
+                if audio_path.exists():
+                    data, sample_rate = sf.read(audio_path)
+                    duration = len(data) / sample_rate
+                    total_duration += duration
+            except Exception as e:
+                print(f"Error calculating duration for chunk {chunk['index']}: {e}")
+
     stories[story_id]["status"] = "ready"
+    stories[story_id]["total_duration_seconds"] = total_duration

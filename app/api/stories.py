@@ -35,6 +35,7 @@ def list_stories():
             title=story.get("title", "Untitled story"),
             language=story["language"],
             total_chunks=story["total_chunks"],
+            total_duration_seconds=story.get("total_duration_seconds", 0.0),
             created_at=story["created_at"],
         )
         for story in sorted_stories
@@ -108,7 +109,7 @@ async def create_story(
     chunk_size: int = Form(300),
     voice: UploadFile = File(...)
 ):
-    logger.debug("POST /long-story endpoint received request")
+    logger.debug("POST /stories endpoint received request")
     logger.debug(f"Request parameters - language: {language}, chunk_size: {chunk_size}, voice filename: {voice.filename}")
     logger.debug(f"Text length: {len(text)} characters")
     logger.debug(f"Title provided: '{title}'")
