@@ -53,4 +53,4 @@ def process_story_chunks(story_id: UUID, voice_path: str):
                 print(f"Error calculating duration for chunk {chunk['index']}: {e}")
 
     stories[story_id]["status"] = "ready"
-    stories[story_id]["total_duration_seconds"] = total_duration
+    stories[story_id]["total_duration_seconds"] = round(total_duration, 2)
