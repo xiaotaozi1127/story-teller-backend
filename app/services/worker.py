@@ -16,25 +16,37 @@ def process_story_chunks(story_id: UUID, voice_path: str):
 
     for chunk in chunks[story_id]:
         chunk["status"] = "processing"
+        chunk["progress"] = 0.0
 
         try:
+            # Progress: Starting TTS generation (10%)
+            chunk["progress"] = 0.1
+            
             # in XTTS v2, tts.tts() returns ONLY ONE value:
+            # This is the slowest operation, so we update progress before and after
+            chunk["progress"] = 0.2
             wav = tts.tts(
                 text=chunk["text"],
                 speaker_wav=voice_path,
                 language=stories[story_id]["language"],
             )
+            # TTS generation complete (80% - this is the main time-consuming step)
+            chunk["progress"] = 0.8
+            
             sample_rate = tts.synthesizer.output_sample_rate
-
             output_path = AUDIO_DIR / f"{story_id}_{chunk['index']}.wav"
 
             sf.write(output_path, wav, sample_rate)
+            # File write complete (95%)
+            chunk["progress"] = 0.95
 
             chunk["audio_path"] = str(output_path)
             chunk["status"] = "ready"
+            chunk["progress"] = 1.0
 
         except Exception as e:
             chunk["status"] = "failed"
+            chunk["progress"] = 0.0
             chunk["error"] = str(e)
             print("XTTS ERROR:")
             traceback.print_exc()

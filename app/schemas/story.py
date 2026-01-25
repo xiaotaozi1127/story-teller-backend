@@ -13,6 +13,7 @@ class StoryCreateResponse(BaseModel):
 class ChunkInfo(BaseModel):
     index: int
     status: str
+    progress_percentage: float
 
 
 class StoryStatusResponse(BaseModel):
@@ -29,5 +30,6 @@ class StoryListItem(BaseModel):
     title: str
     language: str
     total_chunks: int
+    progress_percentage: float
     total_duration_seconds: float
     created_at: datetime

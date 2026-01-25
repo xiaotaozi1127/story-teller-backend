@@ -28,18 +28,33 @@ def list_stories():
         key=lambda x: x.get("created_at", datetime.min),
         reverse=True,
     )
-    return [
-        StoryListItem(
-            id=story["id"],
-            status=story["status"],
-            title=story.get("title", "Untitled story"),
-            language=story["language"],
-            total_chunks=story["total_chunks"],
-            total_duration_seconds=story.get("total_duration_seconds", 0.0),
-            created_at=story["created_at"],
+    
+    result = []
+    for story in sorted_stories:
+        story_id = story["id"]
+        story_chunks = chunks.get(story_id, [])
+        
+        # Calculate progress_percentage based on chunk progress
+        if story_chunks and story["total_chunks"] > 0:
+            total_progress = sum(c.get("progress", 0.0) for c in story_chunks)
+            progress_percentage = (total_progress / story["total_chunks"]) * 100.0
+        else:
+            progress_percentage = 0.0
+        
+        result.append(
+            StoryListItem(
+                id=story["id"],
+                status=story["status"],
+                title=story.get("title", "Untitled story"),
+                language=story["language"],
+                total_chunks=story["total_chunks"],
+                progress_percentage=round(progress_percentage, 2),
+                total_duration_seconds=story.get("total_duration_seconds", 0.0),
+                created_at=story["created_at"],
+            )
         )
-        for story in sorted_stories
-    ]
+    
+    return result
 
 @router.get("/{story_id}/chunks/{index}")
 async def get_story_chunk_audio(story_id: UUID, index: int):
@@ -95,7 +110,11 @@ async def get_story_status(story_id: UUID):
         total_chunks=story["total_chunks"],
         completed_chunks=completed,
         chunks=[
-            ChunkInfo(index=c["index"], status=c["status"])
+            ChunkInfo(
+                index=c["index"],
+                status=c["status"],
+                progress_percentage=c.get("progress", 0.0) * 100.0
+            )
             for c in story_chunks
         ],
     )
@@ -149,6 +168,7 @@ async def create_story(
             "text": chunk,
             "status": "pending",
             "audio_path": None,
+            "progress": 0.0,
         }
         for i, chunk in enumerate(text_chunks)
     ]
