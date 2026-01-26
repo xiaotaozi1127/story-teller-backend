@@ -22,6 +22,7 @@ class StoryStatusResponse(BaseModel):
     title: str
     total_chunks: int
     completed_chunks: int
+    progress_percentage: float
     chunks: List[ChunkInfo]
 
 class StoryListItem(BaseModel):

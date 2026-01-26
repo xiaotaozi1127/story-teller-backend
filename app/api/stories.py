@@ -102,6 +102,13 @@ async def get_story_status(story_id: UUID):
 
     completed = sum(1 for c in story_chunks if c["status"] == "ready")
 
+    # Calculate progress_percentage based on chunk progress
+    if story_chunks and story["total_chunks"] > 0:
+        total_progress = sum(c.get("progress", 0.0) for c in story_chunks)
+        progress_percentage = (total_progress / story["total_chunks"]) * 100.0
+    else:
+        progress_percentage = 0.0
+
     return StoryStatusResponse(
         story_id=story_id,
         status=story["status"],
@@ -109,6 +116,7 @@ async def get_story_status(story_id: UUID):
         language=story["language"],
         total_chunks=story["total_chunks"],
         completed_chunks=completed,
+        progress_percentage=round(progress_percentage, 2),
         chunks=[
             ChunkInfo(
                 index=c["index"],
