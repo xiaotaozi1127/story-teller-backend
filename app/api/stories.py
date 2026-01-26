@@ -115,6 +115,8 @@ async def get_story_status(story_id: UUID):
         title=story.get("title", "Untitled story"),
         language=story["language"],
         total_chunks=story["total_chunks"],
+        total_duration_seconds=
+            story.get("total_duration_seconds", 0.0),
         completed_chunks=completed,
         progress_percentage=round(progress_percentage, 2),
         chunks=[
