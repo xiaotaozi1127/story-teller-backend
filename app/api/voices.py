@@ -49,18 +49,20 @@ async def create_voice(
         os.remove(file_path)
         raise HTTPException(status_code=400, detail="Voice sample too long (max 30s)")
 
-    voice_obj = Voice(
-        id=voice_id,
-        name=name,
-        language=language,
-        audio_path=file_path,
-        duration_sec=duration,
-        created_at=datetime.now()
-    )
-
-    voices[voice_id] = voice_obj
+    voices[voice_id] = {
+        "id": voice_id,
+        "name": name,
+        "language": language,
+        "audio_path": file_path,
+        "duration_sec": round(duration, 2),
+        "created_at": datetime.now()
+    }
 
     return {
         "voice_id": voice_id,
         "duration_sec": round(duration, 2),
     }
+
+@router.get("", response_model=list[Voice])
+async def list_voices():
+    return voices.values()
